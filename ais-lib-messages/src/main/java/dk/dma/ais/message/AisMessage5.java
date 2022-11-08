@@ -227,7 +227,7 @@ public class AisMessage5 extends AisStaticCommon {
         int day = (int) (eta & 0xF800) >> 11;
         int mon = (int) (eta & 0xF0000) >> 16;
         if (min == 60 || hour == 24 || day == 0 || mon == 0) {
-            return null;
+            return new Date(0);
         }
         Calendar cal = Calendar.getInstance();
         cal.setTimeZone(TimeZone.getTimeZone("GMT+0000"));

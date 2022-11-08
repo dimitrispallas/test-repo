@@ -16,6 +16,7 @@ import dk.dma.ais.message.AisPositionMessage;
 import dk.dma.ais.message_decoders.util.DecoderTestHelper;
 import dk.dma.ais.sentence.SentenceException;
 import dk.dma.ais.sentence.Vdm;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
@@ -109,6 +110,100 @@ public class AisMessage5DecoderTest {
                 true);
     }
 
+    @Test
+    public void shouldWorkButWithoutEta() throws Exception, JSONException {
+        Vdm vdm = new Vdm();
+
+        vdm.parse("!AIVDM,2,1,9,B,506=`kh1SJ<thHp6220H4heHTf2222222222221?0@00040009QSlUDp888888888888880,2*01");
+        vdm.parse("!AIVDM,2,2,9,B,888888888888880,2*2E");
+
+        AisMessage aisMessage = AisMessage.getInstance(vdm);
+        assert aisMessage instanceof AisMessage5;
+
+        AisMessage5 aisMessage5 = (AisMessage5) aisMessage;
+
+        AisMessage5Decoder aisMessage5Decoder = new AisMessage5Decoder(aisMessage5);
+
+        ObjectWriter objectWriter = new ObjectMapper().writer();
+
+        String json = objectWriter.writeValueAsString(aisMessage5Decoder);
+
+        JSONObject jsonObject = new JSONObject(json);
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(0, "Station compliant with Recommendation ITU-R M.1371-1")).toString(),
+                jsonObject.get("versionDFO").toString(),
+                true);
+
+        assertEquals(6514895, jsonObject.getLong("imo"));
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(1, EPFDFixType.get(1).prettyPrint())).toString(),
+                jsonObject.get("posTypeDFO").toString(),
+                true);
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(38, "Draught is 3.8 m")).toString(),
+                jsonObject.get("draughtDFO").toString(),
+                true);
+
+        assertEquals("FORUS", jsonObject.getString("dest").trim());
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        aisMessage5Decoder.getEtaDFO()).toString(), jsonObject.get("etaDFO").toString(), true);
+        JSONObject etaDFO = jsonObject.getJSONObject("etaDFO");
+        Object getAisValue = etaDFO.get("ais_value");
+        Object getDecodedText = etaDFO.get("decoded_text");
+
+        assertEquals(getAisValue.toString(), "null");
+        assertEquals(getDecodedText.toString(), "Month not available (default), Day not available (default)");
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        CommonFieldDecoderHelper.getDteDFO(0)).toString(),
+                jsonObject.get("dteDFO").toString(),
+                true);
+
+        //these are the static common things that are inherited
+
+        assertEquals(jsonObject.getString("callsign").trim(), "LFNA");
+
+        assertEquals(jsonObject.getString("name").trim(), "FALKVIK");
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(79, ShipType.get(79).prettyPrint())).toString(),
+                jsonObject.get("shipTypeDFO").toString(),
+                true);
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(2, "Distance from GPS antenna to bow 2 m")).toString(),
+                jsonObject.get("dimBowDFO").toString(),
+                true);
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(0, "Length of ship is 0 m")).toString(),
+                jsonObject.get("dimSternDFO").toString(),
+                true);
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(0, "GPS position is not available")).toString(),
+                jsonObject.get("dimPortDFO").toString(),
+                true);
+
+        JSONAssert.assertEquals(
+                DecoderTestHelper.getJson(objectWriter,
+                        new DecodedAisFieldObject(0, "Width of ship is 0 m")).toString(),
+                jsonObject.get("dimStarboardDFO").toString(),
+                true);
+    }
 
     @Test
     public void shouldNotWork() throws SentenceException, AisMessageException, SixbitException {
@@ -132,7 +227,7 @@ public class AisMessage5DecoderTest {
     }
 
     @Test
-    public void gimme() throws Exception{
+    public void gimme() throws Exception {
         Vdm vdm = new Vdm();
 
         vdm.parse("!AIVDM,2,1,9,B,53nFBv01SJ<thHp6220H4heHTf2222222222221?50:454o<`9QSlUDp,0*09");
