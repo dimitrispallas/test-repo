@@ -37,14 +37,15 @@ public class CommonFieldDecoderHelper {
         String text;
         if (sog == 63) {
             text = "Speed over ground not available";
-        } else if (sog == 62) {
-            text = "62.1 knots or higher";
-        } else {
+        } else if (sog >= 0 && sog <= 62) {
             double dbl = sog;
             text = dbl + " knots";
+        } else {
+            text = "These values should not be used";
         }
         return new DecodedAisFieldObject(sog, text);
     }
+
 
     public static DecodedAisFieldObject getCogDFOMessage27(int cog) {
         String text;
