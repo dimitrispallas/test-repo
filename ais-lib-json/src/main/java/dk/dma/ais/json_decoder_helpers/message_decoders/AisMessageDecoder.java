@@ -24,7 +24,7 @@ public abstract class AisMessageDecoder {
     //region Getters
 
     public int getMsgId() {
-        return msgId;
+        return aisMessage.getMsgId();
     }
 
     public DecodedAisFieldObject getRepeatDFO() {
