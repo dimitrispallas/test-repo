@@ -7,6 +7,8 @@ import dk.dma.ais.json_decoder_helpers.enums.EPFDFixType;
 import dk.dma.ais.json_decoder_helpers.util.Decodes;
 import dk.dma.ais.message.AisMessage5;
 
+import java.util.Date;
+
 @SuppressWarnings("unused")
 @Decodes(className = AisMessage5.class)
 public class AisMessage5Decoder extends AisStaticCommonDecoder {
@@ -50,8 +52,17 @@ public class AisMessage5Decoder extends AisStaticCommonDecoder {
         return new DecodedAisFieldObject(code, EPFDFixType.get(code).prettyPrint());
     }
 
-    public DecodedAisDate getEtaDFO() {
-        return new DecodedAisDate(aisMessage5.getEtaDate());
+    public DecodedAisFieldObject getEtaDFO() {
+        Date date = new Date();
+        DecodedAisDate decodedAisDate = new DecodedAisDate(date);
+        long zeroAisValue = aisMessage5.getEtaDate().getTime();
+        long aisValue = decodedAisDate.getDateInMillis();
+        String decodedText = aisMessage5.getEtaDate().toString();
+        if(zeroAisValue == 0){
+            return new DecodedAisFieldObject(null, "Month not available (default), Day not available (default)");
+        } else {
+            return new DecodedAisFieldObject(aisValue, decodedText);
+        }
     }
 
     public DecodedAisFieldObject getDraughtDFO() {
